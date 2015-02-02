@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ======================================================================
+     ブランクプロジェクトをビルドするスクリプト
+     ====================================================================== -->
+<project name="Build" default="compile" basedir="..">
+
+	<property name="build" value="./build" />
+	<property name="name" value="kotoba" />
+	<property name="source.dir" value="src" />
+
+	<!-- =================================
+         clean
+       ================================= -->
+	<target name="clean" description="clean all file">
+		<delete file="${build}/${name}.jar" failonerror="false" />
+		<delete includeEmptyDirs="true" failonerror="false">
+			<fileset dir="${build}" includes="**/*" />
+		</delete>
+	</target>
+
+	<!-- =================================
+          compile
+       ================================= -->
+	<target name="compile" depends="clean" description="compile jar file">
+		<echo>current directory: ${basedir}</echo>
+		<mkdir dir="${build}" />
+		<mkdir dir="${build}/classes" />
+
+		<javac srcdir="${source.dir}" destdir="${build}/classes" debug="on" />
+		<copy todir="${build}/classes/app">
+			<fileset dir=".">
+				<include name="*.png" />
+			</fileset>
+		</copy>
+		<copy todir="${build}/classes">
+					<fileset dir=".">
+						<include name="*.png" />
+					</fileset>
+				</copy>
+		<copy todir="${build}">
+			<fileset dir=".">
+				<include name="**/*.txt" />
+			</fileset>
+		</copy>
+	</target>
+	<target name="jar" depends="compile">
+		<echo>${build}/classes</echo>
+		<jar destfile="${build}/app.jar" 
+			basedir="build/classes" 
+			manifest="manifest.txt" 
+			 />
+	</target>
+</project>
