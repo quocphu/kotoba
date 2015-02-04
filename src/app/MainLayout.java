@@ -18,11 +18,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JList;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -53,7 +51,7 @@ public class MainLayout extends JFrame {
 	Boolean isRunning = true;
 	int len = 0;
 	int currentIndex = 0;
-	private static long  waitTime = 2 * 1000;
+	private static long  waitTime = 1 * 60 * 1000;
 	private String hiraMenuText ="Hiragana";
 	private String kanjiMenuText ="Kanji";
 	private String englishMenuText ="English";
@@ -141,7 +139,8 @@ public class MainLayout extends JFrame {
 				}
 
 				if (!wordForm.isVisible()) {
-					setVisible(false);
+					//setVisible(false);
+					minimize();
 					wordForm.setVisible(true);
 				}
 
@@ -155,8 +154,9 @@ public class MainLayout extends JFrame {
 						currentIndex = 0;
 						isRunning = false;
 						try {
-							thread.join();
-						} catch (InterruptedException e1) {
+							//thread.join();
+							thread.stop();
+						} catch (Exception e1) {
 							e1.printStackTrace();
 						}
 					}
@@ -168,7 +168,7 @@ public class MainLayout extends JFrame {
 						@Override
 						public void run() {
 							String displayText = "";
-							
+							String textAll = "";
 							while (isRunning) {
 								if(App.displayText.equals(App.EN)) {
 									displayText = lstWord.get(currentIndex).getEnglish();
@@ -177,13 +177,22 @@ public class MainLayout extends JFrame {
 								} else {
 									displayText = lstWord.get(currentIndex).getHira();
 								}
+								
+								textAll += lstWord.get(currentIndex).getKanji() + "\n";
+								textAll += lstWord.get(currentIndex).getHira() + "\n";
+								textAll += lstWord.get(currentIndex).getEnglish() ;
+								
 								wordForm.setHiraText(displayText);
+								wordForm.setTextAll(textAll);
 								wordForm.setVisible(true);
 								wordForm.setFocusable(true);
 								wordForm.setAlwaysOnTop(true); 
 								wordForm.setAlwaysOnTop(false);
-								wordForm.setTitle("Next word in " + waitTime + "minutes");
+								wordForm.setTitle(getWaitTime() + " minutes");
 								currentIndex++;
+								if(currentIndex > len) {
+									currentIndex = 0;
+								}
 								try {
 									System.out.print("time: "+waitTime);
 									Thread.sleep(waitTime);
@@ -313,7 +322,7 @@ public class MainLayout extends JFrame {
 					public void actionPerformed(ActionEvent e) {
 						int time = Integer.parseInt(e.getActionCommand());
 						MainLayout.setWaitTime(time);
-						wordForm.setTitle("Next word in " + waitTime + "minutes");
+						wordForm.setTitle(getWaitTime() + "minutes");
 					}
 				});
 				subTime.add(menuItem);

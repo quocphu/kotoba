@@ -15,7 +15,6 @@ public class App {
 	public static final String HIRA = "HIRA";
 	public static final String KANJI = "KANJI";
 	public static final String EN = "EN";
-	public static long waitTime = 2 * 1000;
 	public static void main(String[] args) throws IOException {
 		
 		final JListItem fileNames[] = FileDao.getListFileNames(filePath);
@@ -28,7 +27,7 @@ public class App {
 		gui = new MainLayout();
 		gui.setListData(model);
 		gui.display();
-		gui.minimize();
+//		gui.minimize();
 		
 	}
 
