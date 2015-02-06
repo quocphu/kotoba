@@ -2,7 +2,7 @@
 <!-- ======================================================================
      ブランクプロジェクトをビルドするスクリプト
      ====================================================================== -->
-<project name="Build" default="compile" basedir="..">
+<project name="Build" default="jar" basedir="..">
 
 	<property name="build" value="./build" />
 	<property name="name" value="kotoba" />

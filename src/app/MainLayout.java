@@ -1,7 +1,9 @@
 package app;
 
 import java.awt.AWTException;
-import java.awt.FlowLayout;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Menu;
 import java.awt.MenuItem;
@@ -48,55 +50,60 @@ public class MainLayout extends JFrame {
 	SystemTray tray;
 	private WordForm wordForm;
 	Thread thread;
-	Boolean isRunning = true;
+	public Boolean isRunning = true;
+	public Boolean isPause = false;
 	int len = 0;
-	int currentIndex = 0;
+	public int currentIndex = 0;
 	private static long  waitTime = 1 * 60 * 1000;
 	private String hiraMenuText ="Hiragana";
 	private String kanjiMenuText ="Kanji";
 	private String englishMenuText ="English";
 	private String starMenuText = " (*)";
+	private String displayText = "";
+	public String textAll = "";
+	public ArrayList<Word> lstWord;
 	
 	public MainLayout() {
 		setTitle("ことば");
-		
+		listPane = new JList();
+		listPane.setSize(400, 200);
+
+		scrollPane = new JScrollPane(listPane);
+		scrollPane.setSize(400, 200);
+
 		top = new JPanel();
 		top.setSize(400, 200);
-		
-		bottom = new JPanel();
+		top.setLayout(new GridLayout(1,1));
+		top.add(scrollPane);
 
 		btnStart = new JButton("Start");
 		btnReload = new JButton("Reload");
 		btnStop = new JButton("Stop");
 		
-		listPane = new JList();
-		listPane.setSize(400, 200);
-		
-		scrollPane = new JScrollPane(listPane);
-		scrollPane.setSize(400, 200);
-
-		top.add(scrollPane);
-
+		bottom = new JPanel();
+		bottom.setLayout(new GridLayout(0, 3));
 		bottom.add(btnStart);
 		bottom.add(btnReload);
 		bottom.add(btnStop);
+		
+		BorderLayout layout = new BorderLayout(2, 0);
+		layout.setHgap(10);
+		layout.setVgap(10);
+		
+		this.setLayout(layout);
 
-		this.add(top);
-		this.add(bottom);
+		this.add(top, BorderLayout.CENTER);
+		this.add(bottom, BorderLayout.SOUTH);
 
 		this.setSize(400, 250);
 
 		this.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent windowEvent) {
-				System.exit(0);
+				setExtendedState(JFrame.ICONIFIED);
+				//System.exit(0);
 			}
 		});
-
-		FlowLayout layout = new FlowLayout();
-		layout.setHgap(10);
-		layout.setVgap(10);
-		this.setLayout(layout);
-
+	
 		setButtonStartEvent();
 
 		wordForm = new WordForm(this);
@@ -105,6 +112,10 @@ public class MainLayout extends JFrame {
 		closeEvent();
 		setButtonStopEvent();
 		createSystemTray();
+		
+		// Set position on right bottom of screen
+		Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+		setLocation(screenSize.width - this.getWidth(), screenSize.height - this.getHeight());
 	}
 
 	public void display() {
@@ -139,7 +150,6 @@ public class MainLayout extends JFrame {
 				}
 
 				if (!wordForm.isVisible()) {
-					//setVisible(false);
 					minimize();
 					wordForm.setVisible(true);
 				}
@@ -147,7 +157,7 @@ public class MainLayout extends JFrame {
 				String path = App.filePath + File.separator + listPane.getSelectedValue().toString();
 				
 				try {
-					final ArrayList<Word> lstWord = FileDao.readWord(path);
+					lstWord = FileDao.readWord(path);
 					len = lstWord.size();
 					
 					if (thread != null && thread.isAlive()) {
@@ -167,37 +177,21 @@ public class MainLayout extends JFrame {
 						
 						@Override
 						public void run() {
-							String displayText = "";
-							String textAll = "";
 							while (isRunning) {
-								if(App.displayText.equals(App.EN)) {
-									displayText = lstWord.get(currentIndex).getEnglish();
-								} else if(App.displayText.equals(App.KANJI)) {
-									displayText = lstWord.get(currentIndex).getKanji();
-								} else {
-									displayText = lstWord.get(currentIndex).getHira();
-								}
+								if (isPause) continue;
 								
-								textAll += lstWord.get(currentIndex).getKanji() + "\n";
-								textAll += lstWord.get(currentIndex).getHira() + "\n";
-								textAll += lstWord.get(currentIndex).getEnglish() ;
+								showText();
 								
-								wordForm.setHiraText(displayText);
-								wordForm.setTextAll(textAll);
-								wordForm.setVisible(true);
-								wordForm.setFocusable(true);
-								wordForm.setAlwaysOnTop(true); 
-								wordForm.setAlwaysOnTop(false);
-								wordForm.setTitle(getWaitTime() + " minutes");
 								currentIndex++;
-								if(currentIndex > len) {
+								
+								if(currentIndex >= len) {
 									currentIndex = 0;
 								}
+								
 								try {
 									System.out.print("time: "+waitTime);
 									Thread.sleep(waitTime);
 								} catch (InterruptedException e) {
-									// TODO Auto-generated catch block
 									e.printStackTrace();
 								}
 							}
@@ -205,7 +199,6 @@ public class MainLayout extends JFrame {
 					});
 					thread.start();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			}
@@ -237,7 +230,6 @@ public class MainLayout extends JFrame {
 		return waitTime / 60 / 1000;
 	}
 	private void createSystemTray(){
-		//super("SystemTray test");
 		System.out.println("creating instance");
 		try {
 			System.out.println("setting look and feel");
@@ -255,9 +247,7 @@ public class MainLayout extends JFrame {
 					System.exit(0);
 				}
 			};
-			
-			
-			
+
 			PopupMenu popup = new PopupMenu();
 			MenuItem defaultItem = new MenuItem("Exit");
 			defaultItem.addActionListener(exitListener);
@@ -335,6 +325,7 @@ public class MainLayout extends JFrame {
 		} else {
 			System.out.println("system tray not supported");
 		}
+
 		addWindowStateListener(new WindowStateListener() {
 			public void windowStateChanged(WindowEvent e) {
 				if (e.getNewState() == ICONIFIED) {
@@ -371,5 +362,26 @@ public class MainLayout extends JFrame {
 		setIconImage(Toolkit.getDefaultToolkit().getImage("icon.png"));
 	}
 	
-	
+	public void showText() {
+		if(App.displayText.equals(App.EN)) {
+			displayText = lstWord.get(currentIndex).getEnglish();
+		} else if(App.displayText.equals(App.KANJI)) {
+			displayText = lstWord.get(currentIndex).getKanji();
+		} else {
+			displayText = lstWord.get(currentIndex).getHira();
+		}
+
+		textAll = "";
+		textAll += lstWord.get(currentIndex).getKanji() + "\n";
+		textAll += lstWord.get(currentIndex).getHira() + "\n";
+		textAll += lstWord.get(currentIndex).getEnglish() ;
+
+		wordForm.setHiraText(displayText);
+		wordForm.setTextAll(textAll);
+		wordForm.setVisible(true);
+		wordForm.setAlwaysOnTop(true); 
+		wordForm.setAlwaysOnTop(false);
+		wordForm.setTitle(getWaitTime() + " minutes");
+		wordForm.setInfo(currentIndex + "/" + lstWord.size());
+	}
 }
