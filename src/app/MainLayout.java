@@ -54,7 +54,7 @@ public class MainLayout extends JFrame {
 	public Boolean isPause = false;
 	int len = 0;
 	public int currentIndex = 0;
-	private static long  waitTime = 1 * 60 * 1000;
+	private static long  waitTime = 1 * 10 * 1000;
 	private String hiraMenuText ="Hiragana";
 	private String kanjiMenuText ="Kanji";
 	private String englishMenuText ="English";
@@ -77,7 +77,7 @@ public class MainLayout extends JFrame {
 		top.add(scrollPane);
 
 		btnStart = new JButton("Start");
-		btnReload = new JButton("Reload");
+		btnReload = new JButton("Show current");
 		btnStop = new JButton("Stop");
 		
 		bottom = new JPanel();
@@ -112,6 +112,15 @@ public class MainLayout extends JFrame {
 		closeEvent();
 		setButtonStopEvent();
 		createSystemTray();
+		
+		btnReload.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(wordForm == null) return;
+				wordForm.setVisible(true);
+			}
+		});
 		
 		// Set position on right bottom of screen
 		Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
@@ -209,7 +218,7 @@ public class MainLayout extends JFrame {
 		this.addWindowListener(new java.awt.event.WindowAdapter() {
 		    @Override
 		    public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-		        isRunning = false;
+		       // isRunning = false;
 		    }
 		});
 	}
@@ -244,6 +253,7 @@ public class MainLayout extends JFrame {
 			ActionListener exitListener = new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					System.out.println("Exiting....");
+					isRunning = false;
 					System.exit(0);
 				}
 			};
@@ -312,7 +322,7 @@ public class MainLayout extends JFrame {
 					public void actionPerformed(ActionEvent e) {
 						int time = Integer.parseInt(e.getActionCommand());
 						MainLayout.setWaitTime(time);
-						wordForm.setTitle(getWaitTime() + "minutes");
+						wordForm.setTitle(getWaitTime() + " minutes");
 					}
 				});
 				subTime.add(menuItem);
