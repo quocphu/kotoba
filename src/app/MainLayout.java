@@ -54,7 +54,7 @@ public class MainLayout extends JFrame {
 	public Boolean isPause = false;
 	int len = 0;
 	public int currentIndex = 0;
-	private static long  waitTime = 1 * 10 * 1000;
+	private static long  waitTime = 1 * 3 * 1000;
 	private String hiraMenuText ="Hiragana";
 	private String kanjiMenuText ="Kanji";
 	private String englishMenuText ="English";
@@ -181,6 +181,7 @@ public class MainLayout extends JFrame {
 					}
 					
 					isRunning = true;
+					isPause = false;
 					
 					thread = new Thread(new Runnable() {
 						
@@ -198,7 +199,7 @@ public class MainLayout extends JFrame {
 								}
 								
 								try {
-									System.out.print("time: "+waitTime);
+									System.out.print("time: " + waitTime);
 									Thread.sleep(waitTime);
 								} catch (InterruptedException e) {
 									e.printStackTrace();
@@ -392,6 +393,6 @@ public class MainLayout extends JFrame {
 		wordForm.setAlwaysOnTop(true); 
 		wordForm.setAlwaysOnTop(false);
 		wordForm.setTitle(getWaitTime() + " minutes");
-		wordForm.setInfo(currentIndex + "/" + lstWord.size());
+		wordForm.setInfo(currentIndex + 1 + "/" + lstWord.size());
 	}
 }

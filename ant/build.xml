@@ -33,10 +33,10 @@
 			</fileset>
 		</copy>
 		<copy todir="${build}/classes">
-					<fileset dir=".">
-						<include name="*.png" />
-					</fileset>
-				</copy>
+			<fileset dir=".">
+				<include name="*.png" />
+			</fileset>
+		</copy>
 		<copy todir="${build}">
 			<fileset dir=".">
 				<include name="**/*.txt" />
