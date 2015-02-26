@@ -7,6 +7,7 @@
 	<property name="build" value="./build" />
 	<property name="name" value="kotoba" />
 	<property name="source.dir" value="src" />
+	<property name="lib-dir" value="libs" />
 
 	<!-- =================================
          clean
@@ -26,7 +27,11 @@
 		<mkdir dir="${build}" />
 		<mkdir dir="${build}/classes" />
 
-		<javac srcdir="${source.dir}" destdir="${build}/classes" debug="on" />
+		<javac srcdir="${source.dir}" destdir="${build}/classes" debug="on">
+			<classpath>
+				<pathelement path="libs/jl1.0.1.jar"/>
+			</classpath>
+		</javac>
 		<copy todir="${build}/classes/app">
 			<fileset dir=".">
 				<include name="*.png" />
@@ -45,9 +50,8 @@
 	</target>
 	<target name="jar" depends="compile">
 		<echo>${build}/classes</echo>
-		<jar destfile="${build}/app.jar" 
-			basedir="build/classes" 
-			manifest="manifest.txt" 
-			 />
+		<jar destfile="${build}/app.jar" basedir="build/classes" manifest="manifest.txt">
+			<zipgroupfileset dir="${lib-dir}" includes="*.jar" />
+		</jar>
 	</target>
 </project>

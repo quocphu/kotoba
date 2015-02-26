@@ -29,6 +29,8 @@ import javax.swing.JScrollPane;
 import javax.swing.ListModel;
 import javax.swing.UIManager;
 
+import audio.AudioPlayer;
+import bean.JListItem;
 import bean.Word;
 import dao.FileDao;
 
@@ -40,7 +42,7 @@ public class MainLayout extends JFrame {
 	private JPanel bottom;
 
 	private JScrollPane scrollPane;
-	private JList listPane;
+	private JList<JListItem> listPane;
 
 	private JButton btnStart;
 	private JButton btnReload;
@@ -53,8 +55,9 @@ public class MainLayout extends JFrame {
 	public Boolean isRunning = true;
 	public Boolean isPause = false;
 	int len = 0;
-	public int currentIndex = 0;
-	private static long  waitTime = 1 * 3 * 1000;
+	public int currentIndex = -1;
+	public int currentLessonIndex = 0;
+	private static long  waitTime = 1 * 2 * 1000;
 	private String hiraMenuText ="Hiragana";
 	private String kanjiMenuText ="Kanji";
 	private String englishMenuText ="English";
@@ -62,10 +65,12 @@ public class MainLayout extends JFrame {
 	private String displayText = "";
 	public String textAll = "";
 	public ArrayList<Word> lstWord;
+	public JListItem[] lstAudioFileName;
+	public boolean isPlaySound = true;
 	
 	public MainLayout() {
 		setTitle("ことば");
-		listPane = new JList();
+		listPane = new JList<JListItem>();
 		listPane.setSize(400, 200);
 
 		scrollPane = new JScrollPane(listPane);
@@ -137,7 +142,7 @@ public class MainLayout extends JFrame {
 		this.setState(JFrame.ICONIFIED);
 	}
 
-	public void setListData(ListModel model) {
+	public void setListData(ListModel<JListItem> model) {
 		this.listPane.setModel(model);
 	}
 
@@ -145,6 +150,7 @@ public class MainLayout extends JFrame {
 		this.btnStop.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				isRunning = false;
+				currentIndex = 0;
 				wordForm.setVisible(false);
 			}
 		});
@@ -152,6 +158,7 @@ public class MainLayout extends JFrame {
 	
 	private void setButtonStartEvent() {
 		this.btnStart.addActionListener(new ActionListener() {
+			@SuppressWarnings("deprecation")
 			public void actionPerformed(ActionEvent e) {
 				if (listPane.getSelectedValue() == null) {
 					JOptionPane.showMessageDialog(null, "Please select file!");
@@ -163,11 +170,16 @@ public class MainLayout extends JFrame {
 					wordForm.setVisible(true);
 				}
 
-				String path = App.filePath + File.separator + listPane.getSelectedValue().toString();
+				String path = App.textFilePath + File.separator + listPane.getSelectedValue().toString();
 				
 				try {
+					// Read text
 					lstWord = FileDao.readWord(path);
 					len = lstWord.size();
+					
+					// Read all audio file
+					String audioDirPath = App.audioFilePath + addZeroNumber(listPane.getSelectedIndex() + 1) + File.separator;
+					lstAudioFileName = FileDao.getListFileNames(audioDirPath, "mp3");
 					
 					if (thread != null && thread.isAlive()) {
 						currentIndex = 0;
@@ -190,14 +202,12 @@ public class MainLayout extends JFrame {
 							while (isRunning) {
 								if (isPause) continue;
 								
-								showText();
-								
 								currentIndex++;
 								
 								if(currentIndex >= len) {
-									currentIndex = 0;
+									currentIndex = -1;
 								}
-								
+								showText();
 								try {
 									System.out.print("time: " + waitTime);
 									Thread.sleep(waitTime);
@@ -272,6 +282,22 @@ public class MainLayout extends JFrame {
 			});
 			popup.add(defaultItem);
 			
+			// Create menu on/off play sound
+			final MenuItem playSoundItem = new MenuItem("Play sound (*)");
+			playSoundItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if(isPlaySound) {
+						playSoundItem.setLabel("Play sound");
+						isPlaySound = false;
+					} else {
+						playSoundItem.setLabel("Play sound (*)");
+						isPlaySound = true;
+					}
+				}
+			});
+			popup.add(playSoundItem);
+			
+			
 			// Create sub menu display text
 			Menu subPopup = new Menu("Display text");
 			final MenuItem hira = new MenuItem(hiraMenuText + starMenuText);
@@ -331,7 +357,7 @@ public class MainLayout extends JFrame {
 			
 			popup.add(subPopup);
 			popup.add(subTime);
-			trayIcon = new TrayIcon(image, "SystemTray Demo", popup);
+			trayIcon = new TrayIcon(image, "ことば", popup);
 			trayIcon.setImageAutoSize(true);
 		} else {
 			System.out.println("system tray not supported");
@@ -394,5 +420,23 @@ public class MainLayout extends JFrame {
 		wordForm.setAlwaysOnTop(false);
 		wordForm.setTitle(getWaitTime() + " minutes");
 		wordForm.setInfo(currentIndex + 1 + "/" + lstWord.size());
+
+		if(isPlaySound) {
+			playSound();
+		}
+	}
+	
+	public void playSound() {
+		try {
+			AudioPlayer.play(lstAudioFileName[currentIndex].getPath());
+			System.out.println("Play sound");
+		} catch(Exception e) {
+			System.out.println("Can't play audio");
+			e.printStackTrace();
+		}
+	}
+	
+	public String addZeroNumber(Integer num){
+		return num < 10 ? "0" + num : "" + num;
 	}
 }

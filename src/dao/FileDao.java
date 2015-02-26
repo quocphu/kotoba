@@ -3,6 +3,7 @@ package dao;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -61,9 +62,24 @@ public class FileDao {
 //
 //		return lstFileName.toArray(new String[lstFileName.size()]);
 //	}
-	public static JListItem[] getListFileNames(String path) {
+	public static JListItem[] getListFileNames(String path, String extName) {
 		File f = new File(path);
-		File[] listfiles = f.listFiles();
+		
+		final String extendName = extName;
+		FilenameFilter filter = new FilenameFilter() {
+			
+			@Override
+			public boolean accept(File dir, String name) {
+				if(name.endsWith(extendName)) {
+					return true;
+				}
+					
+				return false;
+			}
+		};
+		
+		File[] listfiles = f.listFiles(filter);
+		
 		ArrayList<JListItem> lstFileName = new ArrayList<JListItem>();
 		for (int i = 0; i < listfiles.length; i++) {
 			JListItem item = new JListItem();

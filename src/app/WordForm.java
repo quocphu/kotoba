@@ -28,9 +28,11 @@ public class WordForm extends JFrame{
 	JButton btnPause;
 	JButton btnNext;
 	JButton btnPrev;
+	JButton btnSound;
+	JButton btnPlaySound;
 	JFrame parent;
 	String textAll;
-	private ImageIcon iconPlay, iconPause;
+	private ImageIcon iconPlay, iconPause, iconSoundOn, iconSoundOff;
 	public WordForm(JFrame parent) {
 		this.parent = parent;
 		this.textAll = "";
@@ -42,7 +44,7 @@ public class WordForm extends JFrame{
 		
 		lbInfo = new JLabel("Info");
 
-		this.setSize(500, 200);
+		this.setSize(600, 200);
 		this.setTitle("Word");
 		
 		Image image = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/app/icon.png"));
@@ -52,12 +54,17 @@ public class WordForm extends JFrame{
 		btnPause = new JButton("Pause");
 		btnNext = new JButton("Next");
 		btnPrev = new JButton("Previous");
+		btnSound = new JButton("On");
+		btnPlaySound = new JButton("Speak");
 		
 		BufferedImage buttonIcon;
 		try {
 			
 			iconPause = new ImageIcon(ImageIO.read(getClass().getResource("/app/pause.png")));
 			iconPlay = new ImageIcon(ImageIO.read(getClass().getResource("/app/play.png")));
+			
+			iconSoundOn = new ImageIcon(ImageIO.read(getClass().getResource("/app/speaker_on.png")));
+			iconSoundOff = new ImageIcon(ImageIO.read(getClass().getResource("/app/speaker_off.png")));
 			
 			buttonIcon = ImageIO.read(getClass().getResource("/app/close.png"));
 			btnClose.setIcon(new ImageIcon(buttonIcon));
@@ -73,6 +80,12 @@ public class WordForm extends JFrame{
 			
 			buttonIcon = ImageIO.read(getClass().getResource("/app/prev.png"));
 			btnPrev.setIcon(new ImageIcon(buttonIcon));
+
+			buttonIcon = ImageIO.read(getClass().getResource("/app/speaker_on.png"));
+			btnSound.setIcon(new ImageIcon(buttonIcon));
+			
+			buttonIcon = ImageIO.read(getClass().getResource("/app/speaker.png"));
+			btnPlaySound.setIcon(new ImageIcon(buttonIcon));
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -136,6 +149,30 @@ public class WordForm extends JFrame{
 			}
 		});
 		
+		btnSound.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(getParent().isPlaySound) {
+					getParent().isPlaySound = false;
+					btnSound.setText("Off");
+					btnSound.setIcon(iconSoundOff);
+				} else {
+					getParent().isPlaySound = true;
+					btnSound.setText("On");
+					btnSound.setIcon(iconSoundOn);
+				}
+				
+			}
+		});
+		btnPlaySound.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				getParent().playSound();
+				
+			}
+		});
 		BorderLayout layout = new BorderLayout();
 		layout.setHgap(1);
 		layout.setVgap(1);
@@ -148,6 +185,8 @@ public class WordForm extends JFrame{
 		groupButton.add(btnPause);
 		groupButton.add(btnPrev);
 		groupButton.add(btnNext);
+		groupButton.add(btnSound);
+		groupButton.add(btnPlaySound);
 		
 		this.add(lblHira, BorderLayout.CENTER);
 		this.add(groupButton, BorderLayout.SOUTH);
