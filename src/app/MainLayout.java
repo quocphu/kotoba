@@ -192,6 +192,7 @@ public class MainLayout extends JFrame {
 						}
 					}
 					
+					currentIndex = 0;
 					isRunning = true;
 					isPause = false;
 					

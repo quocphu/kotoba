@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!-- ======================================================================
-     ブランクプロジェクトをビルドするスクリプト
-     ====================================================================== -->
 <project name="Build" default="jar" basedir="..">
 
 	<property name="build" value="./build" />
 	<property name="name" value="kotoba" />
 	<property name="source.dir" value="src" />
 	<property name="lib-dir" value="libs" />
+	<property name="text-path" value="data/text" />
+	<property name="audio-path" value="data/audio" />
 
 	<!-- =================================
          clean
@@ -26,7 +25,8 @@
 		<echo>current directory: ${basedir}</echo>
 		<mkdir dir="${build}" />
 		<mkdir dir="${build}/classes" />
-
+		<mkdir dir="${build}/data" />
+		
 		<javac srcdir="${source.dir}" destdir="${build}/classes" debug="on">
 			<classpath>
 				<pathelement path="libs/jl1.0.1.jar"/>
@@ -42,10 +42,8 @@
 				<include name="*.png" />
 			</fileset>
 		</copy>
-		<copy todir="${build}">
-			<fileset dir=".">
-				<include name="**/*.txt" />
-			</fileset>
+		<copy todir="${build}/data">
+			 <fileset dir="data"/>
 		</copy>
 	</target>
 	<target name="jar" depends="compile">
