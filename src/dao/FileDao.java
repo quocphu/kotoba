@@ -3,9 +3,13 @@ package dao;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Properties;
 
+import app.Constant;
 import bean.JListItem;
 import bean.Word;
 
@@ -61,9 +65,24 @@ public class FileDao {
 //
 //		return lstFileName.toArray(new String[lstFileName.size()]);
 //	}
-	public static JListItem[] getListFileNames(String path) {
+	public static JListItem[] getListFileNames(String path, String extName) {
 		File f = new File(path);
-		File[] listfiles = f.listFiles();
+		
+		final String extendName = extName;
+		FilenameFilter filter = new FilenameFilter() {
+			
+			@Override
+			public boolean accept(File dir, String name) {
+				if(name.endsWith(extendName)) {
+					return true;
+				}
+					
+				return false;
+			}
+		};
+		
+		File[] listfiles = f.listFiles(filter);
+		
 		ArrayList<JListItem> lstFileName = new ArrayList<JListItem>();
 		for (int i = 0; i < listfiles.length; i++) {
 			JListItem item = new JListItem();
@@ -73,5 +92,40 @@ public class FileDao {
 		}
 
 		return lstFileName.toArray(new JListItem[lstFileName.size()]);
+	}
+	public static Properties readProperties(){
+		Properties props = new Properties();
+		try {
+			File configFile = new File("config.properties");
+			 
+			FileReader reader = new FileReader(configFile);
+			 
+			// Load the properties file:
+			props.load(reader);
+		} catch (Exception e) {
+			System.out.println("Can not load " + Constant.CONFIG_FILE);
+			e.printStackTrace();
+		}
+		return props;
+	}
+	
+	public static int saveProperties(String key, String value){
+		try {
+			Properties props = readProperties();
+			props.setProperty(key, value);
+			
+			File configFile = new File(Constant.CONFIG_FILE);
+			FileWriter writer = new FileWriter(configFile);
+			
+			props.store(writer, "Save properties: " + key + "=" + value);
+			
+			writer.flush();
+			writer.close();
+			
+		} catch(Exception e) {
+			System.out.println("Can not save properties.");
+			e.printStackTrace();
+		}
+		return -1;
 	}
 }

@@ -1,4 +1,4 @@
 Manifest-Version: 1.0
-Created-By: k.phu - quocphu.02@gmail.com
+Created-By: quocphu.02@gmail.com
 Sealed: true
 Main-Class: app.App
