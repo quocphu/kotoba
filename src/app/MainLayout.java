@@ -19,6 +19,7 @@ import java.awt.event.WindowStateListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -57,7 +58,7 @@ public class MainLayout extends JFrame {
 	int len = 0;
 	public int currentIndex = -1;
 	public int currentLessonIndex = 0;
-	private static long  waitTime = 1 * 2 * 1000;
+	private static long  waitTime = Constant.WAIT_TIME;
 	private String hiraMenuText ="Hiragana";
 	private String kanjiMenuText ="Kanji";
 	private String englishMenuText ="English";
@@ -67,6 +68,11 @@ public class MainLayout extends JFrame {
 	public ArrayList<Word> lstWord;
 	public JListItem[] lstAudioFileName;
 	public boolean isPlaySound = true;
+	
+	private String currentFileName = "";
+	
+	public boolean isRandom = false;
+	public ArrayList<Integer> randomIndex;
 	
 	public MainLayout() {
 		setTitle("ことば");
@@ -158,7 +164,6 @@ public class MainLayout extends JFrame {
 	
 	private void setButtonStartEvent() {
 		this.btnStart.addActionListener(new ActionListener() {
-			@SuppressWarnings("deprecation")
 			public void actionPerformed(ActionEvent e) {
 				if (listPane.getSelectedValue() == null) {
 					JOptionPane.showMessageDialog(null, "Please select file!");
@@ -170,58 +175,10 @@ public class MainLayout extends JFrame {
 					wordForm.setVisible(true);
 				}
 
-				String path = App.textFilePath + File.separator + listPane.getSelectedValue().toString();
+				String textPath = App.textFilePath + listPane.getSelectedValue().toString();
+				String audioDirPath = App.audioFilePath + addZeroNumber(listPane.getSelectedIndex() + 1) + File.separator;
+				start(textPath, audioDirPath);
 				
-				try {
-					// Read text
-					lstWord = FileDao.readWord(path);
-					len = lstWord.size();
-					
-					// Read all audio file
-					String audioDirPath = App.audioFilePath + addZeroNumber(listPane.getSelectedIndex() + 1) + File.separator;
-					lstAudioFileName = FileDao.getListFileNames(audioDirPath, "mp3");
-					
-					if (thread != null && thread.isAlive()) {
-						currentIndex = 0;
-						isRunning = false;
-						try {
-							//thread.join();
-							thread.stop();
-						} catch (Exception e1) {
-							e1.printStackTrace();
-						}
-					}
-					
-					currentIndex = 0;
-					isRunning = true;
-					isPause = false;
-					
-					thread = new Thread(new Runnable() {
-						
-						@Override
-						public void run() {
-							while (isRunning) {
-								if (isPause) continue;
-								
-								currentIndex++;
-								
-								if(currentIndex >= len) {
-									currentIndex = -1;
-								}
-								showText();
-								try {
-									System.out.print("time: " + waitTime);
-									Thread.sleep(waitTime);
-								} catch (InterruptedException e) {
-									e.printStackTrace();
-								}
-							}
-						}
-					});
-					thread.start();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
 			}
 		});
 	}
@@ -298,6 +255,22 @@ public class MainLayout extends JFrame {
 			});
 			popup.add(playSoundItem);
 			
+			// Create menu on/off play sound
+			final MenuItem randomItem = new MenuItem("Random");
+			randomItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if(isRandom) {
+						playSoundItem.setLabel("Random");
+						isRandom = false;
+						FileDao.saveProperties(Constant.RANDOM, isRandom + "");
+					} else {
+						playSoundItem.setLabel("Random (*)");
+						isRandom = true;
+						FileDao.saveProperties(Constant.RANDOM, isRandom + "");
+					}
+				}
+			});
+			popup.add(randomItem);
 			
 			// Create sub menu display text
 			Menu subPopup = new Menu("Display text");
@@ -351,6 +324,7 @@ public class MainLayout extends JFrame {
 						int time = Integer.parseInt(e.getActionCommand());
 						MainLayout.setWaitTime(time);
 						wordForm.setTitle(getWaitTime() + " minutes");
+						FileDao.saveProperties(Constant.TIME_INTERVAL, time+"");
 					}
 				});
 				subTime.add(menuItem);
@@ -363,34 +337,42 @@ public class MainLayout extends JFrame {
 		} else {
 			System.out.println("system tray not supported");
 		}
-
+		
+		try {
+			if (tray.getTrayIcons() == null || tray.getTrayIcons().length <= 0) {
+				tray.add(trayIcon);
+			}
+		} catch (AWTException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		addWindowStateListener(new WindowStateListener() {
 			public void windowStateChanged(WindowEvent e) {
 				if (e.getNewState() == ICONIFIED) {
 					try {
-						tray.add(trayIcon);
+//						tray.add(trayIcon);
 						setVisible(false);
 						System.out.println("added to SystemTray");
-					} catch (AWTException ex) {
+					} catch (Exception ex) {
 						System.out.println("unable to add to tray");
 					}
 				}
 				if (e.getNewState() == 7) {
 					try {
-						tray.add(trayIcon);
+//						tray.add(trayIcon);
 						setVisible(false);
 						System.out.println("added to SystemTray");
-					} catch (AWTException ex) {
+					} catch (Exception ex) {
 						System.out.println("unable to add to system tray");
 					}
 				}
 				if (e.getNewState() == MAXIMIZED_BOTH) {
-					tray.remove(trayIcon);
+//					tray.remove(trayIcon);
 					setVisible(true);
 					System.out.println("Tray icon removed");
 				}
 				if (e.getNewState() == NORMAL) {
-					tray.remove(trayIcon);
+//					tray.remove(trayIcon);
 					setVisible(true);
 					System.out.println("Tray icon removed");
 				}
@@ -402,17 +384,17 @@ public class MainLayout extends JFrame {
 	
 	public void showText() {
 		if(App.displayText.equals(App.EN)) {
-			displayText = lstWord.get(currentIndex).getEnglish();
+			displayText = lstWord.get(getCurrentIndex()).getEnglish();
 		} else if(App.displayText.equals(App.KANJI)) {
-			displayText = lstWord.get(currentIndex).getKanji();
+			displayText = lstWord.get(getCurrentIndex()).getKanji();
 		} else {
-			displayText = lstWord.get(currentIndex).getHira();
+			displayText = lstWord.get(getCurrentIndex()).getHira();
 		}
 
 		textAll = "";
-		textAll += lstWord.get(currentIndex).getKanji() + "\n";
-		textAll += lstWord.get(currentIndex).getHira() + "\n";
-		textAll += lstWord.get(currentIndex).getEnglish() ;
+		textAll += lstWord.get(getCurrentIndex()).getKanji() + "\n";
+		textAll += lstWord.get(getCurrentIndex()).getHira() + "\n";
+		textAll += lstWord.get(getCurrentIndex()).getEnglish() ;
 
 		wordForm.setHiraText(displayText);
 		wordForm.setTextAll(textAll);
@@ -420,7 +402,7 @@ public class MainLayout extends JFrame {
 		wordForm.setAlwaysOnTop(true); 
 		wordForm.setAlwaysOnTop(false);
 		wordForm.setTitle(getWaitTime() + " minutes");
-		wordForm.setInfo(currentIndex + 1 + "/" + lstWord.size());
+		wordForm.setInfo(getRealIndex() + 1 + "/" + lstWord.size() + "[" + currentFileName + "]");
 
 		if(isPlaySound) {
 			playSound();
@@ -429,8 +411,8 @@ public class MainLayout extends JFrame {
 	
 	public void playSound() {
 		try {
-			AudioPlayer.play(lstAudioFileName[currentIndex].getPath());
-			System.out.println("Play sound");
+			AudioPlayer.play(lstAudioFileName[getCurrentIndex()].getPath());
+			System.out.println("Play sound: " + lstAudioFileName[getCurrentIndex()].getPath());
 		} catch(Exception e) {
 			System.out.println("Can't play audio");
 			e.printStackTrace();
@@ -439,5 +421,91 @@ public class MainLayout extends JFrame {
 	
 	public String addZeroNumber(Integer num){
 		return num < 10 ? "0" + num : "" + num;
+	}
+	
+	public void start(String textPath, String audioPath) {
+		currentFileName = textPath;
+	
+		try {
+			// Read text
+			lstWord = FileDao.readWord(textPath);
+			len = lstWord.size();
+			
+			if (isRandom) {
+				randomIndex = randomIndex(len);
+			}
+			// Read all audio file
+			lstAudioFileName = FileDao.getListFileNames(audioPath, "mp3");
+			
+			// Write information to configuration file
+			FileDao.saveProperties(Constant.LAST_TEXT_FILE, textPath);
+			FileDao.saveProperties(Constant.LAST_AUDIO_FILE, audioPath);
+			
+			if (thread != null && thread.isAlive()) {
+				currentIndex = 0;
+				isRunning = false;
+				try {
+					//thread.join();
+					thread.stop();
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
+			
+			currentIndex = -1;
+			isRunning = true;
+			isPause = false;
+			
+			thread = new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					while (isRunning) {
+						if (isPause) continue;
+						
+						currentIndex++;
+						
+						if(currentIndex >= len) {
+							currentIndex = -1;
+						}
+						showText();
+						try {
+							System.out.print("time: " + waitTime);
+							Thread.sleep(waitTime);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			});
+			thread.start();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+	private ArrayList<Integer> randomIndex(int len) {
+		ArrayList<Integer> result = new ArrayList<Integer>(len);
+		
+		for(int i = 0; i < len; i++) {
+			result.add(i);
+		}
+		Collections.shuffle(result);
+		return result;
+	}
+	
+	private Integer getCurrentIndex() {
+		if (randomIndex == null) {
+			return currentIndex;
+		}
+		return randomIndex.get(currentIndex);
+	}
+	public void resetRandom() {
+		randomIndex = null;
+	}
+	public void createRandom() {
+		randomIndex = randomIndex(len);
+	}
+	public Integer getRealIndex() {
+		return currentIndex;
 	}
 }
