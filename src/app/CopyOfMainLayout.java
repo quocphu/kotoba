@@ -16,33 +16,29 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowStateListener;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
+import javax.swing.ListModel;
 import javax.swing.UIManager;
-import javax.swing.WindowConstants;
-import javax.swing.table.TableModel;
 
-import tablemodel.LessonTableModel;
 import audio.AudioPlayer;
 import bean.JListItem;
-import bean.Kotoba;
 import bean.Word;
-import common.Common;
-import common.Constant;
-import dao.FileDao;
-import dao.KotobaDao;
-import dao.LessonDao;
 
-public class MainLayout extends JFrame {
+import common.Constant;
+
+import dao.FileDao;
+
+public class CopyOfMainLayout extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	// private JFrame this;
@@ -50,13 +46,11 @@ public class MainLayout extends JFrame {
 	private JPanel bottom;
 
 	private JScrollPane scrollPane;
-//	private JList<JListItem> listPane;
-	private JTable lessonTable;
+	private JList<JListItem> listPane;
 
 	private JButton btnStart;
 	private JButton btnReload;
 	private JButton btnStop;
-	private JButton btnEdit;
 
 	TrayIcon trayIcon;
 	SystemTray tray;
@@ -83,18 +77,12 @@ public class MainLayout extends JFrame {
 	public boolean isRandom = false;
 	public ArrayList<Integer> randomIndex;
 	
-	LessonDao lessonDao;
-	KotobaDao kotobaDao;
-	public MainLayout() {
-		lessonDao = new LessonDao();
-		kotobaDao = new KotobaDao();
-		
+	public CopyOfMainLayout() {
 		setTitle("ことば");
-//		listPane = new JList<JListItem>();
-//		listPane.setSize(400, 200);
-		lessonTable =  new  JTable();
-//		scrollPane = new JScrollPane(listPane);
-		scrollPane = new JScrollPane(lessonTable);
+		listPane = new JList<JListItem>();
+		listPane.setSize(400, 200);
+
+		scrollPane = new JScrollPane(listPane);
 		scrollPane.setSize(400, 200);
 
 		top = new JPanel();
@@ -105,14 +93,12 @@ public class MainLayout extends JFrame {
 		btnStart = new JButton("Start");
 		btnReload = new JButton("Show current");
 		btnStop = new JButton("Stop");
-		btnEdit = new JButton("Edit");
 		
 		bottom = new JPanel();
 		bottom.setLayout(new GridLayout(0, 3));
 		bottom.add(btnStart);
 		bottom.add(btnReload);
 		bottom.add(btnStop);
-		bottom.add(btnEdit);
 		
 		BorderLayout layout = new BorderLayout(2, 0);
 		layout.setHgap(10);
@@ -150,19 +136,6 @@ public class MainLayout extends JFrame {
 			}
 		});
 		
-		btnEdit.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				LessonTableModel lessonModel = (LessonTableModel) lessonTable.getModel();
-//				String textPath = String.valueOf(lessonModel.getDataAt(lessonTable.getSelectedRow()).getId());
-				KotobaEditForm frame = new KotobaEditForm(lessonModel.getDataAt(lessonTable.getSelectedRow()).getId());
-//				frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
-				frame.pack();
-				frame.setVisible(true);
-			}
-		});
 		// Set position on right bottom of screen
 		Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(screenSize.width - this.getWidth(), screenSize.height - this.getHeight());
@@ -178,13 +151,10 @@ public class MainLayout extends JFrame {
 		this.setState(JFrame.ICONIFIED);
 	}
 
-//	public void setListData(ListModel<JListItem> model) {
-//		this.listPane.setModel(model);
-//	}
-
-	public void setListData(TableModel model) {
-		this.lessonTable.setModel(model);
+	public void setListData(ListModel<JListItem> model) {
+		this.listPane.setModel(model);
 	}
+
 	private void setButtonStopEvent() {
 		this.btnStop.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -198,27 +168,18 @@ public class MainLayout extends JFrame {
 	private void setButtonStartEvent() {
 		this.btnStart.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-//				if (listPane.getSelectedValue() == null) {
-//					JOptionPane.showMessageDialog(null, "Please select file!");
-//					return;
-//				}
-
-				if (lessonTable.getSelectedRow() < 0) {
+				if (listPane.getSelectedValue() == null) {
 					JOptionPane.showMessageDialog(null, "Please select file!");
 					return;
 				}
-				
+
 				if (!wordForm.isVisible()) {
 					minimize();
 					wordForm.setVisible(true);
 				}
 
-//				String textPath = App.textFilePath + listPane.getSelectedValue().toString();
-//				String audioDirPath = App.audioFilePath + addZeroNumber(listPane.getSelectedIndex() + 1) + File.separator;
-				LessonTableModel lessonModel = (LessonTableModel) lessonTable.getModel();
-				String textPath = String.valueOf(lessonModel.getDataAt(lessonTable.getSelectedRow()).getId());
-				String audioDirPath = "";
-						
+				String textPath = App.textFilePath + listPane.getSelectedValue().toString();
+				String audioDirPath = App.audioFilePath + addZeroNumber(listPane.getSelectedIndex() + 1) + File.separator;
 				start(textPath, audioDirPath);
 				
 			}
@@ -364,7 +325,7 @@ public class MainLayout extends JFrame {
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						int time = Integer.parseInt(e.getActionCommand());
-						MainLayout.setWaitTime(time);
+						CopyOfMainLayout.setWaitTime(time);
 						wordForm.setTitle(getWaitTime() + " minutes");
 						FileDao.saveProperties(Constant.TIME_INTERVAL, time+"");
 					}
@@ -470,17 +431,14 @@ public class MainLayout extends JFrame {
 	
 		try {
 			// Read text
-//			lstWord = FileDao.readWord(textPath);
-			List<Kotoba> lstKotoba = kotobaDao.getByLessonId(Integer.parseInt(textPath));
-			lstWord = (ArrayList<Word>) Common.convertWordFromKotoba(lstKotoba);
+			lstWord = FileDao.readWord(textPath);
 			len = lstWord.size();
 			
 			if (isRandom) {
 				randomIndex = randomIndex(len);
 			}
 			// Read all audio file
-//			lstAudioFileName = FileDao.getListFileNames(audioPath, "mp3");
-			lstAudioFileName = Common.convertJListItemFromKotoba(lstKotoba);
+			lstAudioFileName = FileDao.getListFileNames(audioPath, "mp3");
 			
 			// Write information to configuration file
 			FileDao.saveProperties(Constant.LAST_TEXT_FILE, textPath);
@@ -524,7 +482,7 @@ public class MainLayout extends JFrame {
 				}
 			});
 			thread.start();
-		} catch (Exception e1) {
+		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
 	}

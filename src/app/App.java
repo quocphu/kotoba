@@ -1,12 +1,17 @@
 package app;
 
 import java.io.File;
+import java.util.List;
 import java.util.Properties;
 
-import javax.swing.DefaultListModel;
-
+import tablemodel.LessonTableModel;
 import bean.JListItem;
+import bean.Lesson;
+
+import common.Constant;
+
 import dao.FileDao;
+import dao.LessonDao;
 
 public class App {
 	public static String textFilePath = "data" + File.separator + "text" + File.separator;
@@ -21,11 +26,14 @@ public class App {
 		
 		// Get list *.txt file's name
 		final JListItem fileNames[] = FileDao.getListFileNames(textFilePath, "txt");
-		DefaultListModel<JListItem> model = new DefaultListModel<JListItem>();
+//		DefaultListModel<JListItem> model = new DefaultListModel<JListItem>();
+		LessonDao lessonDao = new LessonDao();
+		List<Lesson> data = lessonDao.getAllHaveWordCount();
+		LessonTableModel model = new LessonTableModel(data);
 		
-		for (JListItem name:fileNames) {
-			model.addElement(name);
-		}
+//		for (JListItem name:fileNames) {
+//			model.addElement(name);
+//		}
 		
 //		gui.setWaitTime(time);
 		gui = new MainLayout();
@@ -42,6 +50,7 @@ public class App {
 			e.printStackTrace();
 		}
 //		gui.minimize();
+		
 	}
 
 }

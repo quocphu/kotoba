@@ -4,7 +4,6 @@ public class Word {
 	String hira;
 	String kanji;
 	String english;
-	
 	public Word(){};
 	public Word(String hira, String kanji, String english){
 		this.hira = hira;
@@ -29,5 +28,4 @@ public class Word {
 	public void setEnglish(String english) {
 		this.english = english;
 	}
-	
 }
