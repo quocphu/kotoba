@@ -50,7 +50,8 @@ public class App {
 			e.printStackTrace();
 		}
 //		gui.minimize();
-		
+		System.out.println("app path1: " + System.getProperty("user.dir"));
+		System.out.println("app path2: " + new java.io.File("").getAbsolutePath());
 	}
 
 }

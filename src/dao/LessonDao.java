@@ -26,8 +26,20 @@ public class LessonDao extends SQLLiteProvider {
 		List<Lesson> lstLesson = this.select(Lesson.class, sql);
 		return lstLesson;
 	}
-	public int update(Kotoba kotoba) {
-		return 0;
+	public int update(Lesson lesson) {
+		String sql ="";
+		sql += "update lesson ";
+		sql += "set title={title}, update_date = current_timestamp";
+		sql += " where id={id}";
+		
+		HashMap<String, Object> params = new HashMap<String, Object>();
+		params.put("id", lesson.getId());
+		params.put("title", lesson.getTitle());
+		
+		return execute(sql, params);
+		
 	}
-	
+	public void delete(Integer id) {
+		delete("lesson", id);
+	}
 }

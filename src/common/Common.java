@@ -82,4 +82,20 @@ public class Common {
 		}
 		return itemArray;
 	}
+	public static boolean isInAppDirectory(String path) {
+		String appPath = System.getProperty("user.dir");
+		if (path.indexOf(appPath) >= 0) {
+			return true;
+		}
+		return false;
+	}
+	
+	public static String normalizePath(String path) {
+		String appPath = System.getProperty("user.dir");
+		return path.replace(appPath, "");
+	}
+	
+	public static String getAppPath(){
+		return System.getProperty("user.dir");
+	}
 }

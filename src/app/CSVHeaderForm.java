@@ -7,6 +7,8 @@ import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,6 +87,13 @@ public class CSVHeaderForm extends JDialog {
 		add(pnBottom, BorderLayout.SOUTH);
 		
 		setButtonListeners();
+		
+		 this.addWindowListener(new WindowAdapter() {
+			    @Override
+			    public void windowClosed(WindowEvent e) {
+			        close();
+			    }
+			});
 	}
 	public static void main(String... args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -228,7 +237,7 @@ public class CSVHeaderForm extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				CSVHeaderModel<CSVHeader> rModel =  (CSVHeaderModel<CSVHeader>) lRight.getModel();
 				if (rModel.getSize() <= 0) {
-					JOptionPane.showMessageDialog(null, "Please select at least one column!");
+					JOptionPane.showMessageDialog(getContentPane(), "Please select at least one column!", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				data = rModel.getData();
@@ -239,8 +248,10 @@ public class CSVHeaderForm extends JDialog {
 	private void close() {
 		this.dispose();
 		this.getRootPane().setVisible(false);
+		this.data = null;
 	}
 	public List<CSVHeader> getData(){
 		return this.data;
 	}
+	
 }

@@ -7,6 +7,7 @@ import bean.Kotoba;
 
 public class KotobaDao extends SQLLiteProvider {
 	public int update(Kotoba kotoba) {
+		kotoba.normalizeAudioPath();
 		String sql ="";
 		sql += "update kotoba ";
 		sql += "set lesson_id={lesson_id},";
@@ -18,7 +19,7 @@ public class KotobaDao extends SQLLiteProvider {
 		sql += " where id={id}";
 		
 		HashMap<String, Object> params = new HashMap<String, Object>();
-		params.put("id", kotoba.getLessonId());
+		params.put("id", kotoba.getId());
 		params.put("lesson_id", kotoba.getLessonId());
 		params.put("japanese", kotoba.getJapanese());
 		params.put("kanji", kotoba.getKanji());
@@ -32,6 +33,7 @@ public class KotobaDao extends SQLLiteProvider {
 		delete("kotoba", kotobaId);
 	}
 	public int insert(Kotoba kotoba) {
+		kotoba.normalizeAudioPath();
 		String sql ="insert into kotoba(lesson_id, japanese, kanji, mean, audio, create_date, update_date) values({lesson_id}, {japanese}, {kanji}, {mean}, {audio}, current_date, current_date );";
 		HashMap<String, Object> params = new HashMap<String, Object>();
 		params.put("lesson_id", kotoba.getLessonId());

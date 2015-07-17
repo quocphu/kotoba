@@ -193,7 +193,7 @@ public class FileDao {
 						e.printStackTrace();
 					}
 				}
-			
+//				t.normalizeAudioPath();
 				lstKotoba.add(t);
 			}
 		}

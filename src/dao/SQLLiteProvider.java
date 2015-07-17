@@ -45,7 +45,7 @@ public class SQLLiteProvider {
 		try {
 			Statement statement = connection.createStatement();
 			sql = createSql(params, sql);
-//			System.err.println(sql);
+			System.err.println(sql);
 			return statement.executeUpdate(sql);
 		} catch (SQLException e) {
 			e.printStackTrace();

@@ -35,6 +35,7 @@ import tablemodel.LessonTableModel;
 import audio.AudioPlayer;
 import bean.JListItem;
 import bean.Kotoba;
+import bean.Lesson;
 import bean.Word;
 import common.Common;
 import common.Constant;
@@ -57,6 +58,7 @@ public class MainLayout extends JFrame {
 	private JButton btnReload;
 	private JButton btnStop;
 	private JButton btnEdit;
+	private JButton btnRefresh;
 
 	TrayIcon trayIcon;
 	SystemTray tray;
@@ -67,7 +69,7 @@ public class MainLayout extends JFrame {
 	int len = 0;
 	public int currentIndex = -1;
 	public int currentLessonIndex = 0;
-	private static long  waitTime = Constant.WAIT_TIME;
+	private static long  waitTime = Constant.WAIT_TIME;// *1000;
 	private String hiraMenuText ="Hiragana";
 	private String kanjiMenuText ="Kanji";
 	private String englishMenuText ="English";
@@ -106,6 +108,7 @@ public class MainLayout extends JFrame {
 		btnReload = new JButton("Show current");
 		btnStop = new JButton("Stop");
 		btnEdit = new JButton("Edit");
+		btnRefresh = new JButton("Refresh");
 		
 		bottom = new JPanel();
 		bottom.setLayout(new GridLayout(0, 3));
@@ -113,6 +116,7 @@ public class MainLayout extends JFrame {
 		bottom.add(btnReload);
 		bottom.add(btnStop);
 		bottom.add(btnEdit);
+		bottom.add(btnRefresh);
 		
 		BorderLayout layout = new BorderLayout(2, 0);
 		layout.setHgap(10);
@@ -154,13 +158,30 @@ public class MainLayout extends JFrame {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				if (lessonTable.getSelectedRow() < 0) {
+					JOptionPane.showMessageDialog(getThis(), "Please select lesson!");
+					return;
+				}
+				
 				LessonTableModel lessonModel = (LessonTableModel) lessonTable.getModel();
+				System.out.println(lessonTable.getSelectedRow());
+				System.out.println(lessonModel.getDataAt(lessonTable.getSelectedRow()).getId());
 //				String textPath = String.valueOf(lessonModel.getDataAt(lessonTable.getSelectedRow()).getId());
 				KotobaEditForm frame = new KotobaEditForm(lessonModel.getDataAt(lessonTable.getSelectedRow()).getId());
 //				frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
+				frame.setLocationRelativeTo(getThis());
 				frame.pack();
 				frame.setVisible(true);
+			}
+		});
+		
+		btnRefresh.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				List<Lesson> data = lessonDao.getAllHaveWordCount();
+				LessonTableModel model = new LessonTableModel(data);
+				setListData(model);
 			}
 		});
 		// Set position on right bottom of screen
@@ -204,7 +225,7 @@ public class MainLayout extends JFrame {
 //				}
 
 				if (lessonTable.getSelectedRow() < 0) {
-					JOptionPane.showMessageDialog(null, "Please select file!");
+					JOptionPane.showMessageDialog(getThis(), "Please select lesson!", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				
@@ -302,14 +323,17 @@ public class MainLayout extends JFrame {
 			randomItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					if(isRandom) {
-						playSoundItem.setLabel("Random");
+						randomItem.setLabel("Random");
 						isRandom = false;
 						FileDao.saveProperties(Constant.RANDOM, isRandom + "");
+						System.out.println("isRandom1 " + isRandom);
 					} else {
-						playSoundItem.setLabel("Random (*)");
+						randomItem.setLabel("Random (*)");
 						isRandom = true;
 						FileDao.saveProperties(Constant.RANDOM, isRandom + "");
+						System.out.println("isRandom2 " + isRandom);
 					}
+					System.out.println("isRandom " + isRandom);
 				}
 			});
 			popup.add(randomItem);
@@ -552,5 +576,8 @@ public class MainLayout extends JFrame {
 	}
 	public Integer getRealIndex() {
 		return currentIndex;
+	}
+	private JFrame getThis(){
+		return this;
 	}
 }

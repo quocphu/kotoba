@@ -26,15 +26,21 @@
 		<mkdir dir="${build}" />
 		<mkdir dir="${build}/classes" />
 		<mkdir dir="${build}/data" />
-		
-		<javac srcdir="${source.dir}" destdir="${build}/classes" debug="on">
+
+		<javac srcdir="${source.dir}" destdir="${build}/classes" debug="on" includeantruntime="false">
 			<classpath>
 				<pathelement path="libs/jl1.0.1.jar"/>
+				<pathelement path="libs/opencsv-3.4.jar"/>
 			</classpath>
 		</javac>
 		<copy todir="${build}/classes/app">
 			<fileset dir=".">
 				<include name="*.png" />
+			</fileset>
+		</copy>
+		<copy todir="${build}">
+			<fileset dir=".">
+				<include name="*.sqlite" />
 			</fileset>
 		</copy>
 		<copy todir="${build}/classes">
@@ -43,7 +49,7 @@
 			</fileset>
 		</copy>
 		<copy todir="${build}/data">
-			 <fileset dir="data"/>
+			<fileset dir="data"/>
 		</copy>
 	</target>
 	<target name="jar" depends="compile">

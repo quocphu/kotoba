@@ -3,6 +3,8 @@ package bean;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import common.Common;
+
 public class Kotoba {
 	private int id;
 	private int lessonId;
@@ -90,5 +92,11 @@ public class Kotoba {
 		audio = data[6];
 		priority =  Integer.parseInt(data[7]);
 		
+	}
+	
+	public void normalizeAudioPath(){
+		if(Common.isInAppDirectory(this.audio)) {
+			this.audio = Common.normalizePath(this.audio).substring(1);
+		}
 	}
 }

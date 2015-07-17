@@ -69,6 +69,7 @@ public class KotobaEditForm extends JFrame {
 	String BTN_LOAD_DATA_FROM_FILE = "Load file";
 	private JButton btnSave, btnReset, btnResetAll, btnLoadAudio, btnLoadDataFromFile;
 	private JButton btnAudioChoose, btnAudioInsert, btnAudioDelete, btnAudioMoveUp, btnAudioMoveDown;
+	private JButton btnLessonEdit, btnLessonNew, btnLessonDelete;
 	private JPanel bottomForm, bottomButton, pnAudio;
 	private JComboBox<Lesson> cmbLesson;
 	private JTextField txtWord, txtKanji, txtMean, txtAudio;
@@ -81,16 +82,17 @@ public class KotobaEditForm extends JFrame {
 	private void reload() {
 		KotobaTableModel kotobaModel = new KotobaTableModel(loadData());
 		table.setModel(kotobaModel);
-		this.repaint();
+		table.getColumn("Audio").setCellRenderer(new AudioRenderer());
+		kotobaModel.fireTableDataChanged();
+		table.repaint();
 	}
 
 	private List<Kotoba> loadData() {
-		SQLLiteProvider p = new SQLLiteProvider();
-//		this.lstKotoba = p.select(Kotoba.class, "SELECT k.*,l.title as lessonName FROM kotoba k join lesson l on k.lesson_Id = l.id");
 		this.lstKotoba = kotobaDao.getByLessonId(lessonId);
 		return lstKotoba;
 	}
 
+	@SuppressWarnings({ "unchecked", "serial" })
 	public KotobaEditForm(Integer lessonId) {
 		lessonDao = new LessonDao();
 		kotobaDao = new KotobaDao();
@@ -108,10 +110,9 @@ public class KotobaEditForm extends JFrame {
 		table.setFillsViewportHeight(true);
 		table.setRowHeight(36);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		// DefaultTableCellRenderer audioRender = new
-		// DefaultTableCellRenderer();
-		// audioRender.setHorizontalAlignment(SwingConstants.RIGHT);
+		
 		table.getColumn("Audio").setCellRenderer(new AudioRenderer());
+		
 		// Layout
 		// Add table to scroll panel
 		scrollPane = new JScrollPane(table);
@@ -144,7 +145,14 @@ public class KotobaEditForm extends JFrame {
 		pnAudio.add(txtAudio);
 		initAudioButton();
 
-		fieldPanel.add(cmbLesson);
+		initLessonButton();
+		JPanel pnLesson = new JPanel(new GridLayout(1,0));
+		pnLesson.add(cmbLesson);
+		pnLesson.add(btnLessonEdit);
+		pnLesson.add(btnLessonNew);
+		pnLesson.add(btnLessonDelete);
+		
+		fieldPanel.add(pnLesson);
 		fieldPanel.add(txtWord);
 		fieldPanel.add(txtKanji);
 		fieldPanel.add(txtMean);
@@ -174,12 +182,7 @@ public class KotobaEditForm extends JFrame {
 		this.setSize(400, 250);
 
 		setTableListener();
-		List<Kotoba> ktbFromCSV = FileDao.readKotobaFromCSV("bai1.csv", ",", new String[] { "japanese", "kanji", "mean" });
-
-		// for (Kotoba ktb : ktbFromCSV) {
-		// System.out.println("add " + ktb.getJapanese());
-		// insertTableRow(ktb);
-		// }
+	
 		Action actionListener = new AbstractAction() {
 			public void actionPerformed(ActionEvent actionEvent) {
 				System.out.println("Got an CTRL + S");
@@ -289,6 +292,7 @@ public class KotobaEditForm extends JFrame {
 					KotobaTableModel kotobaModel = (KotobaTableModel) table.getModel();
 
 					int selectedRowIndex = table.getSelectedRow();
+					
 					Kotoba ktb = new Kotoba();
 					if(selectedRowIndex >= 0 && selectedRowIndex <= kotobaModel.getRowCount()) {
 						kotobaModel.insertData(ktb, selectedRowIndex);
@@ -298,8 +302,12 @@ public class KotobaEditForm extends JFrame {
 					}
 				} else {
 					KotobaTableModel kotobaModel = (KotobaTableModel) table.getModel();
-
+					
 					int selectedRowIndex = table.getSelectedRow();
+					if(selectedRowIndex < 0) {
+						showMessageSelectRow();
+						return;
+					}
 					Kotoba ktb = new Kotoba();
 					kotobaModel.addData(ktb);
 					String audio = "";
@@ -330,6 +338,10 @@ public class KotobaEditForm extends JFrame {
 						table.setRowSelectionInterval(selectedRowIndex - 1, selectedRowIndex - 1);
 					}
 				} else {
+					if(selectedRowIndex < 0) {
+						showMessageSelectRow();
+						return;
+					}
 					String audio = "";
 					for (int i = selectedRowIndex; i < kotobaModel.getRowCount() - 1; i++) {
 						audio = (String) kotobaModel.getValueAt(i + 1, AUDIO_COLUMN_INDEX);
@@ -347,7 +359,8 @@ public class KotobaEditForm extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				KotobaTableModel kotobaModel = (KotobaTableModel) table.getModel();
 				int selectedRowIndex = table.getSelectedRow();
-				if (selectedRowIndex == 0) {
+				if (selectedRowIndex <= 0) {
+					showMessageSelectRow();
 					return;
 				}
 				Object audio = kotobaModel.getValueAt(selectedRowIndex, AUDIO_COLUMN_INDEX);
@@ -363,7 +376,8 @@ public class KotobaEditForm extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				KotobaTableModel kotobaModel = (KotobaTableModel) table.getModel();
 				int selectedRowIndex = table.getSelectedRow();
-				if (selectedRowIndex >= kotobaModel.getRowCount() - 1) {
+				if (selectedRowIndex >= kotobaModel.getRowCount() - 1 || selectedRowIndex < 0) {
+					showMessageSelectRow();
 					return;
 				}
 				Object audio = kotobaModel.getValueAt(selectedRowIndex, AUDIO_COLUMN_INDEX);
@@ -379,7 +393,7 @@ public class KotobaEditForm extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser fc = new JFileChooser();
 				fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				fc.setCurrentDirectory(new File("/Users/letoan/Documents/nihongo/soft/"));
+				fc.setCurrentDirectory(new File(Common.getAppPath()));
 				if (fc.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
 					File f = fc.getSelectedFile();
 					txtAudio.setText(f.getPath());
@@ -422,13 +436,13 @@ public class KotobaEditForm extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-
-				KotobaTableModel kotobaModel = (KotobaTableModel) table.getModel();
-
-				table.setModel(kotobaModel);
-				kotobaModel.fireTableDataChanged();
 				reload();
-				table.repaint();
+//				KotobaTableModel kotobaModel = (KotobaTableModel) table.getModel();
+//
+//				table.setModel(kotobaModel);
+//				kotobaModel.fireTableDataChanged();
+//				reload();
+//				table.repaint();
 			}
 		});
 
@@ -455,7 +469,7 @@ public class KotobaEditForm extends JFrame {
 					});
 
 					if (files.length == 0) {
-						JOptionPane.showMessageDialog(null, "Have no mp3 file!");
+						JOptionPane.showMessageDialog(getContentPane(), "Have no mp3 file!", "Error", JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					for (int i = 0; i < files.length; i++) {
@@ -472,8 +486,11 @@ public class KotobaEditForm extends JFrame {
 				KotobaTableModel model = (KotobaTableModel) table.getModel();
 				HashMap<Integer, Kotoba> editedItems = model.getEditedItems();
 				HashMap<Integer, Kotoba> deletedItems = model.getDeletedItems();
+				
 				for(Integer kotobaId : editedItems.keySet()) {
 					kotobaDao.update(editedItems.get(kotobaId));
+					System.out.println("Update " + kotobaId);
+					System.out.println("Update " + editedItems.get(kotobaId).getAudio());
 				}
 				
 				for(Integer kotobaId : deletedItems.keySet()) {
@@ -496,7 +513,7 @@ public class KotobaEditForm extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser fc = new JFileChooser();
-				fc.setCurrentDirectory(new File("/Users/letoan/Documents/nihongo/soft/"));
+				fc.setCurrentDirectory(new File("/Users/letoan/Documents/"));
 				fc.setFileFilter(Common.createFileFilter("csv"));
 				if (fc.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
 					File f = fc.getSelectedFile();
@@ -509,11 +526,16 @@ public class KotobaEditForm extends JFrame {
 					headers.add(new CSVHeader("Audio", "audio"));
 					
 					CSVHeaderForm frame = new CSVHeaderForm((Frame) getThis(), headers);
-					
+					frame.setLocationRelativeTo(getThis());
 					frame.pack();
 					frame.setVisible(true);
 					
 					headers = frame.getData();
+					
+					if(headers == null) {
+						return;
+					}
+					
 					String[] header = new String[headers.size()];
 					for(int i = 0; i < header.length; i++) {
 						header[i] = headers.get(i).getProperty();
@@ -528,16 +550,110 @@ public class KotobaEditForm extends JFrame {
 		});
 	}
 	
+	private void initLessonButton() {
+		btnLessonEdit = new JButton("Edit");
+		btnLessonNew = new JButton("New");
+		btnLessonDelete = new JButton("Delete");
+		
+		btnLessonNew.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String lessonName = (String)JOptionPane.showInputDialog(
+	                    getThis(),
+	                    "Input lesson name:\n",
+	                    "New Lesson",
+	                    JOptionPane.PLAIN_MESSAGE,
+	                    null,
+	                    null,
+	                    "");
+				System.out.println("Lesson name: " + lessonName);
+				if (lessonName != null && lessonName.length() == 0) {
+					JOptionPane.showMessageDialog(getContentPane(), "Lesson name must not be empty!", "Error", JOptionPane.ERROR_MESSAGE);
+				} else {
+					Lesson lesson = new Lesson();
+					lesson.setTitle(lessonName);
+					lessonDao.insert(lesson);
+					loadAllLesson();
+					cmbLesson.setSelectedIndex(cmbLesson.getItemCount() - 1);
+				}
+			}
+		});
+		
+		btnLessonEdit.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int selectedIndex = cmbLesson.getSelectedIndex();
+				if (selectedIndex < 0) {
+					showMessageSelectRow();
+					return;
+				}
+				
+				Lesson lesson = (Lesson) cmbLesson.getSelectedItem();
+				
+				String lessonName = (String)JOptionPane.showInputDialog(
+	                    getThis(),
+	                    "Input lesson name:\n",
+	                    "Edit Lesson",
+	                    JOptionPane.PLAIN_MESSAGE,
+	                    null,
+	                    null,
+	                    lesson.getTitle());
+				System.out.println("Lesson name: " + lessonName);
+				if (lessonName != null && lessonName.length() == 0) {
+					JOptionPane.showMessageDialog(getContentPane(), "Lesson name must not be empty!", "Error", JOptionPane.ERROR_MESSAGE);
+				} else {
+					
+					lesson.setTitle(lessonName);
+					lessonDao.update(lesson);
+					loadAllLesson();
+					cmbLesson.setSelectedIndex(selectedIndex);
+				}
+			}
+		});
+		
+		btnLessonDelete.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (cmbLesson.getSelectedIndex() < 0) {
+					showMessageSelectRow();
+					return;
+				}
+				
+				Lesson lesson = (Lesson) cmbLesson.getSelectedItem();
+				
+				int confirm = JOptionPane.showConfirmDialog(getThis(),"Do you want delete lesson: " + lesson.getTitle() + " ?", "Delete lesson", JOptionPane.YES_NO_OPTION);
+						
+				if (confirm == JOptionPane.YES_OPTION) {
+					lessonDao.delete(lesson.getId());
+					loadAllLesson();
+				}
+			}
+		});
+	}
 	private void setTextFromFormToTable() {
-		Integer lessonId = ((Lesson)cmbLesson.getSelectedItem()).getId();
+		int selectedRowIndex = table.getSelectedRow();
+		if(selectedRowIndex < 0) {
+			showMessageSelectRow();
+			return;
+		}
+		
+		Lesson lesson = (Lesson)cmbLesson.getSelectedItem();
+		Integer currentLessonId = 0;
+		if(lesson == null) {
+			currentLessonId = this.lessonId;
+		} else {
+			currentLessonId = lesson.getId();
+		}
+		
 		String japanese = txtWord.getText();
 		String kanji = txtKanji.getText();
 		String mean = txtMean.getText();
 		String audio = txtAudio.getText();
 		
-		int selectedRowIndex = table.getSelectedRow();
-		
-		table.setValueAt(lessonId, selectedRowIndex, 0);
+		table.setValueAt(currentLessonId, selectedRowIndex, 0);
 		table.setValueAt(japanese, selectedRowIndex, 1);
 		table.setValueAt(kanji, selectedRowIndex, 2);
 		table.setValueAt(mean, selectedRowIndex, 3);
@@ -546,5 +662,14 @@ public class KotobaEditForm extends JFrame {
 	}
 	private Component getThis(){
 		return this;
+	}
+	
+	private void loadAllLesson() {
+		lessonDao = new LessonDao();
+		this.lstLesson = lessonDao.getAll();
+		cmbLesson.setModel(new LessonComboboxModel(lstLesson));
+	}
+	private void showMessageSelectRow(){
+		JOptionPane.showMessageDialog(getContentPane(), "Please select one row!", "Error", JOptionPane.ERROR_MESSAGE);
 	}
 }
