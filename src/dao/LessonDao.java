@@ -21,7 +21,7 @@ public class LessonDao extends SQLLiteProvider {
 		return lstLesson;
 	}
 	public List<Lesson> getAllHaveWordCount() {
-		String sql = "select l.*, c.num as word_count from lesson l join (SELECT count(*) as num, l.id FROM lesson l join kotoba k on l.id = k.lesson_id group by l.id) c on l.id = c.id";
+		String sql = "select l.*, c.num as word_count from lesson l join (SELECT count(k.id) as num, l.id FROM lesson l left join kotoba k on l.id = k.lesson_id group by l.id) c on l.id = c.id";
 		
 		List<Lesson> lstLesson = this.select(Lesson.class, sql);
 		return lstLesson;

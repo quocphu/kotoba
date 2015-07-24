@@ -106,7 +106,7 @@ public class WordForm extends JFrame{
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(null, getTextAll());
+				JOptionPane.showMessageDialog(getContentPane(), getTextAll());
 				
 			}
 		});

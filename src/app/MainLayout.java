@@ -159,7 +159,7 @@ public class MainLayout extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (lessonTable.getSelectedRow() < 0) {
-					JOptionPane.showMessageDialog(getThis(), "Please select lesson!");
+					JOptionPane.showMessageDialog(getThis(), "Please select lesson!", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				

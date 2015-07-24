@@ -2,7 +2,6 @@ package app;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Frame;
@@ -23,7 +22,6 @@ import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -40,7 +38,6 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import common.Common;
 import tablemodel.AudioRenderer;
 import tablemodel.KotobaTableModel;
 import tablemodel.LessonComboboxModel;
@@ -48,10 +45,10 @@ import audio.AudioPlayer;
 import bean.CSVHeader;
 import bean.Kotoba;
 import bean.Lesson;
+import common.Common;
 import dao.FileDao;
 import dao.KotobaDao;
 import dao.LessonDao;
-import dao.SQLLiteProvider;
 
 public class KotobaEditForm extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -98,8 +95,13 @@ public class KotobaEditForm extends JFrame {
 		kotobaDao = new KotobaDao();
 		this.lessonId = lessonId;
 		this.lstLesson = lessonDao.getAll();
+		Lesson lesson = lessonDao.getById(Lesson.class, this.lessonId);
+		if (lesson != null) {
+			this.setTitle(lesson.getTitle());
+		}
 		
 		this.setFocusable(true);
+		
 		// Load data
 		loadData();
 
@@ -453,7 +455,7 @@ public class KotobaEditForm extends JFrame {
 
 				JFileChooser fc = new JFileChooser();
 				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				fc.setCurrentDirectory(new File("/Users/letoan/Documents/nihongo/soft/"));
+				fc.setCurrentDirectory(new File(Common.getAppPath()));
 				if (fc.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
 					File f = fc.getSelectedFile();
 					File[] files = f.listFiles(new FileFilter() {
@@ -513,7 +515,7 @@ public class KotobaEditForm extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser fc = new JFileChooser();
-				fc.setCurrentDirectory(new File("/Users/letoan/Documents/"));
+				fc.setCurrentDirectory(new File(Common.getAppPath()));
 				fc.setFileFilter(Common.createFileFilter("csv"));
 				if (fc.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
 					File f = fc.getSelectedFile();
@@ -601,7 +603,9 @@ public class KotobaEditForm extends JFrame {
 	                    null,
 	                    lesson.getTitle());
 				System.out.println("Lesson name: " + lessonName);
-				if (lessonName != null && lessonName.length() == 0) {
+				if (lessonName == null) {
+					return;
+				} else if (lessonName.length() == 0) {
 					JOptionPane.showMessageDialog(getContentPane(), "Lesson name must not be empty!", "Error", JOptionPane.ERROR_MESSAGE);
 				} else {
 					
@@ -664,6 +668,7 @@ public class KotobaEditForm extends JFrame {
 		return this;
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void loadAllLesson() {
 		lessonDao = new LessonDao();
 		this.lstLesson = lessonDao.getAll();

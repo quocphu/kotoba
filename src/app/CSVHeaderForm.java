@@ -67,6 +67,7 @@ public class CSVHeaderForm extends JDialog {
 		JScrollPane scrollLeft = new JScrollPane(lLeft);
 		pnLeft.add(scrollLeft);
 		lLeft.setModel(new CSVHeaderModel<CSVHeader>(data));
+		
 		// Right panel
 		pnRight = new JPanel(new BorderLayout());
 		lRight = new JList<CSVHeader>();
@@ -74,6 +75,13 @@ public class CSVHeaderForm extends JDialog {
 		lRight.setModel(rightModel);
 		JScrollPane scrollRight = new JScrollPane(lRight);
 		pnRight.add(scrollRight);
+		
+		List<CSVHeader> rList =  new ArrayList<CSVHeader>();
+		rList.add(data.get(2));
+		rList.add(data.get(1));
+		rList.add(data.get(3));
+		CSVHeaderModel<CSVHeader> rModel = new CSVHeaderModel<CSVHeader>(rList);
+		lRight.setModel(rModel);
 		
 		// Bottom pancel
 		pnBottom = new JPanel(new GridLayout(1,0));
@@ -229,6 +237,7 @@ public class CSVHeaderForm extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				close();
+				data = null;
 			}
 		});
 		
@@ -248,7 +257,6 @@ public class CSVHeaderForm extends JDialog {
 	private void close() {
 		this.dispose();
 		this.getRootPane().setVisible(false);
-		this.data = null;
 	}
 	public List<CSVHeader> getData(){
 		return this.data;

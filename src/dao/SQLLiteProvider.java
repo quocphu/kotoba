@@ -120,7 +120,8 @@ public class SQLLiteProvider {
 
 	public <T> T getById(Class<T> cl, int id) {
 		String sql = "";
-		sql += "select * from " + cl.getName() + "where id=" + id;
+		sql += "select * from " + cl.getSimpleName() + " where id=" + id;
+		
 		try {
 			Statement statement = connection.createStatement();
 			ResultSet rs = statement.executeQuery(sql);
